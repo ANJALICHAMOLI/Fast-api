@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Path
+from fastapi import FastAPI,Path,HTTPException 
 import json
 
 #helper funtion to help load data form json file
@@ -34,7 +34,7 @@ def patient(patient_id :str=Path (...,description='ID of patient in DB',example=
     data = loaddata()
     if patient_id in data :
         return data[patient_id]
-    return{'error':'patient not found'}
+    raise HTTPException(status_code=404, detail= 'patient not found' )
 # if the json file was a dict contaning list or nested dict
 # @app.get("/patient/{patient_id}")
 # def patient(patient_id: str):
