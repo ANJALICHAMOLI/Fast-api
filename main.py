@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Path,HTTPException 
+from fastapi import FastAPI,Path,HTTPException,Query
 import json
 
 #helper funtion to help load data form json file
@@ -43,3 +43,15 @@ def patient(patient_id :str=Path (...,description='ID of patient in DB',example=
 #         if p["PatientID"] == patient_id:
 #             return p
 #     return {"error": "patient not found"}
+@app.get('/sort')
+def sortpatient(sortby: str =Query(...,description= 'sort ont he basis of height ,weight or bmi'),order: str = Query('asc',decription='sort in asc or dec order')):
+
+    valid_feild = ['height','weight','bmi']
+    if sortpatient not in valid_feilds:
+        raise HTTPSException(status_code=400,detail='invalid order slect between asc or dec')
+    data = Loaddata()
+
+    sortorder= True if order == 'desc' else False
+    sorted_data = sorted(data.values(),key=lambda x:x.get (sortby,0), reverse = sortorder)
+
+    return sorted_data   
