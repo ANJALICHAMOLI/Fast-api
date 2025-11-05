@@ -44,12 +44,12 @@ def patient(patient_id :str=Path (...,description='ID of patient in DB',example=
 #             return p
 #     return {"error": "patient not found"}
 @app.get('/sort')
-def sortpatient(sortby: str =Query(...,description= 'sort ont he basis of height ,weight or bmi'),order: str = Query('asc',decription='sort in asc or dec order')):
+def sortpatient(sortby: str =Query(...,description= 'sort ont he basis of height ,weight or bmi'),order: str = Query('asc',description='sort in asc or dec order')):
 
-    valid_feild = ['height','weight','bmi']
-    if sortpatient not in valid_feilds:
-        raise HTTPSException(status_code=400,detail='invalid order slect between asc or dec')
-    data = Loaddata()
+    valid_feilds = ['height','weight','bmi','age']
+    if sortby not in valid_feilds:
+        raise HTTPException(status_code=400,detail='invalid order slect between asc or dec')
+    data = loaddata()
 
     sortorder= True if order == 'desc' else False
     sorted_data = sorted(data.values(),key=lambda x:x.get (sortby,0), reverse = sortorder)
