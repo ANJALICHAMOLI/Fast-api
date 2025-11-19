@@ -25,7 +25,7 @@ class Patient(BaseModel):
     @computed_feild 
     @property
     def bmi(self) -> float:
-        hight_mtr = (round(self.weight/ self.height 2**),2)
+        hight_mtr = (round(self.weight/ (self.height ) **2),2)
         return bmi
     
     @computed_feild
@@ -38,6 +38,7 @@ class Patient(BaseModel):
         else :
             return 'overweight'
 
+    
 @app.get("/")
 def hello():
     return {'message' : 'Patient management system API'}
@@ -83,13 +84,6 @@ def sortpatient(sortby: str =Query(...,description= 'sort ont he basis of height
 
     return sorted_data  
 
-@app.post('/create')
-def create_patient (patient : Patient ):
-    #load existing data
-    data= loaddata()
 
-    # chick if old patient
-    if patient.patient_id in data:
-        raise HTTPException(status_code = 400, detail='patient already exists')
 
     
