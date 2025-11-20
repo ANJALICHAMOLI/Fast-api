@@ -1,7 +1,7 @@
 from fastapi import FastAPI,Path,HTTPException,Query
 from fastapi.responses import JSONResponse 
 from pydantic import BaseModel,Field, computed_field
-from typing import Annotated, Literal
+from typing import Annotated, Literal,Optional
 import json 
 
 
@@ -35,6 +35,14 @@ class Patient(BaseModel):
         else :
             return 'overweight'
 
+class PatientUpdate(BaseModel):
+
+    name : Annotated[Optional[str] , Field (default=None)]
+    city : Annotated[Optional[str] , Field (default=None)]
+    age  :  Annotated[Optional[int] , Field (default=None,gt=0)]
+    gender : Annotated[Optional[Literal['male','female','others']] , Field (default=None)]
+    height : Annotated[Optional[float] , Field (default=None ,gt=0)]
+    weight : Annotated[Optional[float] , Field (default=None, gt=0)]
 
 #helper funtion to help load data form json file
 def loaddata():
@@ -113,4 +121,50 @@ def create_patient (patient : Patient ):
     savedata(data)
 
     return JSONResponse(status_code=201, content={'message':'patientint created sucessfully'})
+
+
+#creating a path parameter to update pateints credentials 
+@app.put('/update/{patient_id}') #fetching patient id by extarting patient_id from url /update/[patient_id
+def update_patient (patient_id :str ,patient_update :PatientUpdate):
+    #takes the extrated variable in fuction (hence has the same name mathcving w url name i.e patient_id in str ) and also takes one more var patient_update of patientupdate which is pydantic object Receives the JSON body sent by the clientThis JSON is validated using the Pydantic model PatientUpdateContains fields like name, age, gender, symptoms, etc.  
+
+    #load exiisting data
+    data = loaddata()
+
+    if patient_id not in data:
+        raise HTTPException (status_code=404, detail='patient not found')
     
+    #if patient exits the extract the patient data
+    existing_patient_info = data[patient_id]
+    
+    #first to work with pydantic object convert it into dictionary
+
+    updated_patient_info =patient_update.model_dump(exclude_unset=True)
+
+    for key,value in updated_patient_info.items():
+        existing_patient_info[key] = value
+#matches key to key from update dict to exisitng and chnages the value for the matched key i.e key from update dict
+    
+#now to also change the copmputed values 
+#existing_patient_info -> pydantic obj -> updated bmi+verdict->pydantic obj->dict
+    
+
+    existing_patient_info['patient_id']=patient_id
+    patient_pydantic_obj = Patient(**existing_patient_info) 
+
+    #pydantic obj -> dict
+    existing_patient_info = patient_pydantic_obj.model_dump(exclude='patient_id')
+
+    #add data to dict
+    data[patient_id] = existing_patient_info
+
+    #save data
+    savedata(data)
+
+    return JSONResponse(status_code=200, content={'message':'patient record updated sucsessfully '})
+
+
+
+
+
+  
