@@ -1,34 +1,31 @@
 from fastapi import FastAPI,Path,HTTPException,Query
-from pydantic import BaseModel, computed_feild
-from typing import Annotated, Feild, Literal
-import json
+from fastapi.responses import JSONResponse 
+from pydantic import BaseModel,Field, computed_field
+from typing import Annotated, Literal
+import json 
 
-#helper funtion to help load data form json file
-def loaddata():
-    with open('patient.json' ,'r') as f:
-        data = json.load(f)
-
-
-    return data
 
 app = FastAPI()
 
 class Patient(BaseModel):
-    patient_id :Annotated[ str , Feild (... , description ='id of the patient', example='P001')]
-    name : Annotated[str , Feild (..., description='name pf the patietnt', example ='John Doe')]
-    city : Annotated[str , Feild (..., description = 'city of the patietnt', example ='new york')]
-    age : Annotated[int , Feild (..., gt=0,lt = 120,description='age of the patient', example =40)]
-    gender : Annotated[Literal ['male','female','others'], Feild (..., description='gender on the patient')]
-    height : Annotated[float , Feild (..., gt =0 , description = 'height of the patient in cm ', example = 175.5)]
-    weight : Annotated[float , Feild (..., gt=0 ,description='weight of the patient in mtrs ',example = '70.2')] 
+    #creating feilds for patient model
+    patient_id :Annotated[ str , Field (... , description ='id of the patient', example='P001')]
+    #patienit id is unique key  hence the feild name used as key in json file
+    name : Annotated[str , Field (..., description='name pf the patietnt', example ='John Doe')]
+    city : Annotated[str , Field (..., description = 'city of the patietnt', example ='new york')]
+    age : Annotated[int , Field (..., gt=0,lt = 120,description='age of the patient', example =40)]
+    gender : Annotated[Literal ['male','female','others'],Field (..., description='gender on the patient')]
+    height : Annotated[float , Field (..., gt =0 , description = 'height of the patient in cm ', example = 1.5)]
+    weight : Annotated[float , Field (..., gt=0 ,description='weight of the patient in mtrs ',example = '70.2')] 
 
-    @computed_feild 
+    @computed_field 
     @property
     def bmi(self) -> float:
-        hight_mtr = (round(self.weight/ (self.height ) **2),2)
+
+        bmi = round(self.weight / (self.height ** 2), 2)
         return bmi
     
-    @computed_feild
+    @computed_field
     @property 
     def verdict(self) -> str :
         if self.bmi < 18.5:
@@ -37,6 +34,19 @@ class Patient(BaseModel):
             return 'normal'
         else :
             return 'overweight'
+
+
+#helper funtion to help load data form json file
+def loaddata():
+    with open('patient.json' ,'r') as f:
+        data = json.load(f)
+    return data
+
+#to save datat strored in post request to jason file
+def savedata(data):
+    with open ('patient.json','w') as f:
+        json.dump(data,f)
+
 
     
 @app.get("/")
@@ -84,6 +94,23 @@ def sortpatient(sortby: str =Query(...,description= 'sort ont he basis of height
 
     return sorted_data  
 
+@app.post('/create')
+def create_patient (patient : Patient ):
+    #load existing data
+    data= loaddata()
 
+    # chick if old patient
+    if patient.patient_id in data:
+        raise HTTPException(status_code = 400, detail='patient already exists')
+    # add new patient 
+    data[patient.patient_id] = patient.model_dump(exclude=["patient_id"])
+       #cretaes a new key in data key = pateintid 
+      # patient.modeldump converts pydantic object into dictionary
+   #exclude must only contain feild name not dot notation 
+    
 
+    #save the data into the json file 
+    savedata(data)
+
+    return JSONResponse(status_code=201, content={'message':'patientint created sucessfully'})
     
