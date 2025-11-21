@@ -163,8 +163,22 @@ def update_patient (patient_id :str ,patient_update :PatientUpdate):
 
     return JSONResponse(status_code=200, content={'message':'patient record updated sucsessfully '})
 
+@app.put('/delete/{patient_id}') 
+def update_patient (patient_id :str ):
+
+    #load data
+    data= loaddata()
+
+#if doenst exist 
+    if patient_id not in data:
+        raise HTTPException(status_code=404,detail='patient not found')
+    
+    #delete 
+    del data[patient_id]
+    
+    savedata(data)
+
+    return JSONResponse(status_code=200, content={'message':'patient record deleted sucsessfully '})
 
 
-
-
-  
+   
